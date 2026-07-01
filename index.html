@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NonoHub — Community Nonograms</title>
+
+  <style>
+    :root {
+      --bg: #f7f3ec;
+      --card: rgba(255, 252, 246, 0.92);
+      --card-solid: #fffaf2;
+      --ink: #1f2933;
+      --muted: #6b7280;
+      --soft: #eef0f3;
+      --accent: #ff7a59;
+      --accent-2: #5b8def;
+      --accent-dark: #e75f3c;
+      --line: #d8d0c5;
+      --cell: #ffffff;
+      --filled: #222222;
+      --x: #d94b4b;
+      --good: #21a67a;
+      --bad: #d94b4b;
+      --shadow: 0 18px 45px rgba(31, 41, 51, 0.10);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 122, 89, 0.20), transparent 34%),
+        radial-gradient(circle at 85% 20%, rgba(91, 141, 239, 0.14), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(33, 166, 122, 0.10), transparent 32%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    a { color: inherit; }
+
+    header {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 46px 0 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+
+    @media (max-width: 760px) {
+      header { grid-template-columns: 1fr; text-align: center; }
+      .hero-actions { justify-content: center; }
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.70);
+      border: 1px solid rgba(216, 208, 197, 0.85);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.5rem, 7vw, 5.2rem);
+      line-height: 0.9;
+      letter-spacing: -0.08em;
+    }
+
+    .hero-text {
+      max-width: 710px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto 64px;
+      display: grid;
+      gap: 22px;
+    }
+
+    section { scroll-margin-top: 24px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(216, 208, 197, 0.86);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      backdrop-filter: blur(12px);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      letter-spacing: -0.055em;
+    }
+
+    h3 { margin: 0; }
+
+    p {
+      color: var(--muted);
+      line-height: 1.58;
+    }
+
+    .section-head p {
+      margin: 7px 0 0;
+      max-width: 680px;
+    }
+
+    button, input, select { font: inherit; }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: var(--ink);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+      box-shadow: 0 8px 18px rgba(31, 41, 51, 0.10);
+      font-weight: 760;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .accent { background: var(--accent); }
+    .accent:hover { background: var(--accent-dark); }
+
+    .blue { background: var(--accent-2); }
+
+    .ghost {
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .danger { background: var(--bad); }
+
+    .small-btn {
+      padding: 8px 11px;
+      font-size: 0.9rem;
+    }
+
+    input, select {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      border-radius: 15px;
+      padding: 10px 12px;
+      outline: none;
+      min-height: 42px;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255, 122, 89, 0.15);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .puzzle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .puzzle-card {
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 13px;
+      align-items: center;
+      transition: transform 0.13s ease, border-color 0.13s ease, box-shadow 0.13s ease;
+    }
+
+    .puzzle-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 122, 89, 0.55);
+      box-shadow: 0 14px 30px rgba(31, 41, 51, 0.10);
+    }
+
+    .preview {
+      width: 74px;
+      height: 74px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: white;
+      image-rendering: pixelated;
+      overflow: hidden;
+    }
+
+    .puzzle-info h3 {
+      font-size: 1rem;
+      letter-spacing: -0.025em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    .play-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .play-layout { grid-template-columns: 1fr; }
+      .stats-box { order: -1; }
+    }
+
+    .play-panel,
+    .builder-panel {
+      overflow: auto;
+    }
+
+    .stats-box {
+      border: 1px dashed var(--line);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.62);
+      padding: 14px;
+    }
+
+    .stats-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .status {
+      margin-top: 12px;
+      color: var(--muted);
+      min-height: 24px;
+    }
+
+    .status.good {
+      color: var(--good);
+      font-weight: 800;
+    }
+
+    .status.bad {
+      color: var(--bad);
+      font-weight: 800;
+    }
+
+    .help {
+      background: rgba(255,255,255,0.70);
+      border: 1px dashed var(--line);
+      padding: 12px;
+      border-radius: 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 12px 0;
+    }
+
+    .nonogram-shell {
+      display: grid;
+      gap: 0;
+      width: max-content;
+      margin-top: 14px;
+      user-select: none;
+    }
+
+    .corner {
+      background: transparent;
+    }
+
+    .top-clue,
+    .side-clue {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1.16;
+      padding: 4px;
+    }
+
+    .top-clue {
+      align-items: end;
+      white-space: pre-line;
+      min-height: 78px;
+    }
+
+    .side-clue {
+      justify-content: end;
+      white-space: nowrap;
+      min-width: 78px;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      background: var(--cell);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-weight: 900;
+      color: var(--x);
+      border-left: 1px solid #cfd3d8;
+      border-top: 1px solid #cfd3d8;
+    }
+
+    .cell.thick-left { border-left: 2px solid var(--ink); }
+    .cell.thick-top { border-top: 2px solid var(--ink); }
+    .cell.thick-right { box-shadow: inset -2px 0 0 var(--ink); }
+    .cell.thick-bottom { box-shadow: inset 0 -2px 0 var(--ink); }
+
+    .cell.thick-right.thick-bottom {
+      box-shadow: inset -2px 0 0 var(--ink), inset 0 -2px 0 var(--ink);
+    }
+
+    .cell.filled {
+      background: var(--filled);
+      color: transparent;
+    }
+
+    .cell.marked::after {
+      content: "×";
+      font-size: 22px;
+      color: var(--x);
+      line-height: 1;
+    }
+
+    .loading,
+    .empty {
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+      background: rgba(255,255,255,0.55);
+      border: 1px dashed var(--line);
+      border-radius: 20px;
+    }
+
+    .builder-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .builder-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 620px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .cell { width: 27px; height: 27px; }
+      .nonogram-shell { transform-origin: top left; }
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <div class="eyebrow">▦ Community nonograms · make, vote, solve</div>
+      <h1>NonoHub</h1>
+      <p class="hero-text">
+        Browse community-submitted nonogram puzzles first, play one instantly, then scroll down to build and submit your own.
+      </p>
+      <div class="hero-actions">
+        <a href="#community"><button class="accent">Browse puzzles</button></a>
+        <a href="#builder"><button class="ghost">Create puzzle</button></a>
+      </div>
+    </div>
+
+    <div class="card" style="max-width: 310px;">
+      <strong>How to play</strong>
+      <p style="margin-bottom:0;">
+        Numbers show the length of filled blocks. Left click fills. Right click marks an X. Complete the picture!
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <section id="community" class="card">
+      <div class="section-head">
+        <div>
+          <h2>Community puzzle library</h2>
+          <p>
+            Newest and top-voted submissions appear here. Pick any puzzle card to load it into the play area below.
+          </p>
+        </div>
+
+        <div class="controls">
+          <select id="sortSelect" aria-label="Sort community puzzles">
+            <option value="new">Newest first</option>
+            <option value="votes">Most votes</option>
+          </select>
+          <button id="randomBtn" class="blue">Random puzzle</button>
+          <button id="refreshBtn" class="ghost">Refresh</button>
+        </div>
+      </div>
+
+      <div id="puzzleList" class="puzzle-grid">
+        <div class="loading">Loading community puzzles...</div>
+      </div>
+    </section>
+
+    <section id="play" class="card">
+      <div class="section-head">
+        <div>
+          <h2 id="playerTitle">Selected puzzle</h2>
+          <p id="playerSubtitle">Choose a puzzle from the community library above to start playing.</p>
+        </div>
+
+        <div class="controls">
+          <button id="checkBtn" class="accent" disabled>Check solution</button>
+          <button id="resetPlayBtn" class="ghost" disabled>Reset board</button>
+        </div>
+      </div>
+
+      <div class="play-layout">
+        <div class="play-panel">
+          <div id="playerBoard"></div>
+          <div id="playStatus" class="status"></div>
+        </div>
+
+        <aside class="stats-box">
+          <strong>Puzzle notes</strong>
+          <p id="puzzleNotes" style="margin-top:0;">No puzzle selected yet.</p>
+          <div class="help">
+            Example clue <strong>3 1</strong> means three filled cells, then a gap, then one filled cell.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="builder" class="card">
+      <div class="section-head">
+        <div>
+          <h2>Create your own puzzle</h2>
+          <p>
+            Paint the final answer grid. The row and column clues are generated automatically, then the puzzle is submitted to Firebase.
+          </p>
+        </div>
+      </div>
+
+      <div class="builder-grid">
+        <div class="builder-panel">
+          <div class="controls">
+            <select id="sizeSelect" aria-label="Puzzle size">
+              <option value="5">5 × 5</option>
+              <option value="8">8 × 8</option>
+              <option value="10" selected>10 × 10</option>
+              <option value="12">12 × 12</option>
+              <option value="15">15 × 15</option>
+            </select>
+            <button id="newMakerBtn" class="ghost">New blank grid</button>
+            <button id="clearMakerBtn" class="danger">Clear</button>
+          </div>
+
+          <div id="makerBoard"></div>
+        </div>
+
+        <aside>
+          <div class="form-grid">
+            <input id="puzzleTitle" placeholder="Puzzle title" maxlength="60" />
+            <input id="authorName" placeholder="Your name / nickname" maxlength="32" />
+          </div>
+
+          <div class="help">
+            Click cells to toggle. Click-and-drag also paints continuously. Try to make recognisable silhouettes for small grids.
+          </div>
+
+          <button id="submitPuzzleBtn" class="accent" style="width:100%;">Submit to community</button>
+          <div id="makeStatus" class="status"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Single-file HTML + Firebase community nonogram site.
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+      query,
+      orderBy,
+      limit,
+      onSnapshot,
+      doc,
+      runTransaction,
+      increment
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfDJsClQ1di2gR0WWLYzhfwBGWZoIIRL4",
+      authDomain: "nono-38667.firebaseapp.com",
+      projectId: "nono-38667",
+      storageBucket: "nono-38667.firebasestorage.app",
+      messagingSenderId: "88159744594",
+      appId: "1:88159744594:web:a679ca30bd5bc8df66658b",
+      measurementId: "G-23Z67ZBXHL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    analyticsIsSupported().then((supported) => {
+      if (supported) getAnalytics(app);
+    });
+
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      makerSize: 10,
+      makerGrid: [],
+      isPainting: false,
+      paintValue: 1,
+      activeBoard: null,
+      puzzles: [],
+      selectedPuzzle: null,
+      playGrid: [],
+      unsubscribe: null
+    };
+
+    const userId = getOrCreateUserId();
+
+    function getOrCreateUserId() {
+      let id = localStorage.getItem("nonohubUserId");
+      if (!id) {
+        id = "user_" + crypto.randomUUID();
+        localStorage.setItem("nonohubUserId", id);
+      }
+      return id;
+    }
+
+    function hasVoted(puzzleId) {
+      return localStorage.getItem("voted_" + puzzleId) === "yes";
+    }
+
+    function setVoted(puzzleId) {
+      localStorage.setItem("voted_" + puzzleId, "yes");
+    }
+
+    function emptyGrid(size, value = 0) {
+      return Array.from({ length: size }, () => Array(size).fill(value));
+    }
+
+    function gridToStrings(grid) {
+      return grid.map(row => row.map(cell => cell ? "1" : "0").join(""));
+    }
+
+    function stringsToGrid(strings) {
+      return strings.map(row => row.split("").map(v => v === "1" ? 1 : 0));
+    }
+
+    function countFilled(grid) {
+      return grid.flat().filter(Boolean).length;
+    }
+
+    function getLineClues(values) {
+      const clues = [];
+      let run = 0;
+
+      for (const value of values) {
+        if (value) {
+          run++;
+        } else if (run > 0) {
+          clues.push(run);
+          run = 0;
+        }
+      }
+
+      if (run > 0) clues.push(run);
+      return clues.length ? clues : [0];
+    }
+
+    function getRowClues(solutionGrid) {
+      return solutionGrid.map(row => getLineClues(row));
+    }
+
+    function getColClues(solutionGrid) {
